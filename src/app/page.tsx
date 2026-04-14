@@ -19,7 +19,7 @@ export default function Home() {
           </h1>
           <p className="mt-6 max-w-2xl text-base leading-7 text-[var(--text-secondary)] sm:text-lg">
             Built with Supabase, role-based workflows, AI tutor guidance via Gemma 3 27B IT,
-            payment readiness, and cloud-native deployment on Vercel.
+            and cloud-native deployment on Vercel.
           </p>
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -102,10 +102,10 @@ export default function Home() {
 
           <article className="rounded-2xl border border-[var(--border)] bg-[var(--surface-1)] p-5">
             <Shield className="h-5 w-5 text-[var(--accent)]" />
-            <h2 className="mt-3 text-lg font-semibold">External Integrations</h2>
+            <h2 className="mt-3 text-lg font-semibold">Operational Backbone</h2>
             <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
-              Cloud storage, payment systems, and notification services wired with free-tier friendly
-              defaults.
+              Role-aware auth, secure database policies, and notification workflows configured for
+              free-tier friendly scale.
             </p>
           </article>
         </section>

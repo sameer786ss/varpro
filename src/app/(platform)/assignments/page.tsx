@@ -1,17 +1,24 @@
 import { formatDistanceToNow } from "date-fns";
 
-import { submitAssignmentAction } from "@/app/(platform)/assignments/actions";
+import {
+  gradeAssignmentSubmissionAction,
+  submitAssignmentAction,
+} from "@/app/(platform)/assignments/actions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { requireSession } from "@/lib/auth/session";
-import { getAssignmentsForRole } from "@/lib/data/assignments";
+import { getAssignmentsForRole, getSubmissionReviewForRole } from "@/lib/data/assignments";
 
 type AssignmentsPageProps = {
   searchParams: Promise<{ error?: string; success?: string }>;
 };
+
+function shortId(value: string) {
+  return `${value.slice(0, 8)}...${value.slice(-4)}`;
+}
 
 export default async function AssignmentsPage({ searchParams }: AssignmentsPageProps) {
   const params = await searchParams;
@@ -37,6 +44,11 @@ export default async function AssignmentsPage({ searchParams }: AssignmentsPageP
         max_score: number;
       }
   >;
+
+  const submissionReview =
+    profile.role === "teacher" || profile.role === "admin"
+      ? await getSubmissionReviewForRole(user.id, profile.role)
+      : [];
 
   return (
     <div className="space-y-6">
@@ -153,6 +165,93 @@ export default async function AssignmentsPage({ searchParams }: AssignmentsPageP
           })
         )}
       </section>
+
+      {profile.role === "teacher" || profile.role === "admin" ? (
+        <section className="space-y-4">
+          <h2 className="font-display text-2xl tracking-tight">Submission Review</h2>
+
+          {submissionReview.length === 0 ? (
+            <Card>
+              <CardTitle>No submissions yet</CardTitle>
+              <CardDescription className="mt-2">
+                Student submissions will appear here for scoring and feedback.
+              </CardDescription>
+            </Card>
+          ) : (
+            submissionReview.map((item) => (
+              <Card key={item.submissionId}>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <CardTitle>{item.assignmentTitle}</CardTitle>
+                  <Badge tone={item.score === null ? "warning" : "success"}>
+                    {item.score === null ? "Needs grading" : `Scored ${item.score}`}
+                  </Badge>
+                </div>
+                <CardDescription className="mt-2">Course: {item.courseTitle}</CardDescription>
+                <CardDescription className="mt-1">Student: {shortId(item.studentId)}</CardDescription>
+                <CardDescription className="mt-1">
+                  Submitted {formatDistanceToNow(new Date(item.submittedAt), { addSuffix: true })}
+                </CardDescription>
+
+                {item.submissionText ? (
+                  <p className="mt-3 rounded-xl border border-[var(--border)] bg-[var(--surface-2)] p-3 text-sm text-[var(--text-secondary)]">
+                    {item.submissionText}
+                  </p>
+                ) : null}
+
+                {item.submissionUrl ? (
+                  <a
+                    href={item.submissionUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-3 inline-block text-sm font-medium text-[var(--accent)] hover:underline"
+                  >
+                    Open attached link
+                  </a>
+                ) : null}
+
+                <form action={gradeAssignmentSubmissionAction} className="mt-4 space-y-3">
+                  <input type="hidden" name="submission_id" value={item.submissionId} />
+                  <div>
+                    <label
+                      htmlFor={`score-${item.submissionId}`}
+                      className="mb-1 block text-sm text-[var(--text-secondary)]"
+                    >
+                      Score
+                    </label>
+                    <Input
+                      id={`score-${item.submissionId}`}
+                      name="score"
+                      type="number"
+                      min={0}
+                      max={1000}
+                      required
+                      defaultValue={item.score ?? undefined}
+                      className="max-w-[220px]"
+                    />
+                  </div>
+                  <div>
+                    <label
+                      htmlFor={`feedback-${item.submissionId}`}
+                      className="mb-1 block text-sm text-[var(--text-secondary)]"
+                    >
+                      Feedback
+                    </label>
+                    <Textarea
+                      id={`feedback-${item.submissionId}`}
+                      name="feedback"
+                      placeholder="Write targeted feedback for the learner."
+                      defaultValue={item.feedback ?? ""}
+                    />
+                  </div>
+                  <Button type="submit" variant="secondary">
+                    {item.score === null ? "Grade Submission" : "Update Grade"}
+                  </Button>
+                </form>
+              </Card>
+            ))
+          )}
+        </section>
+      ) : null}
     </div>
   );
 }

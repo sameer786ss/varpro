@@ -307,12 +307,7 @@ on public.profiles
 for select
 to authenticated
 using (
-  auth.uid() = id
-  or exists (
-    select 1 from public.profiles p
-    where p.id = auth.uid()
-      and p.role in ('admin', 'staff')
-  )
+  public.is_admin_or_staff(id)
 );
 
 drop policy if exists "profiles_insert_self_or_service" on public.profiles;
@@ -330,20 +325,10 @@ on public.profiles
 for update
 to authenticated
 using (
-  auth.uid() = id
-  or exists (
-    select 1 from public.profiles p
-    where p.id = auth.uid()
-      and p.role = 'admin'
-  )
+  public.is_admin_or_staff(id)
 )
 with check (
-  auth.uid() = id
-  or exists (
-    select 1 from public.profiles p
-    where p.id = auth.uid()
-      and p.role = 'admin'
-  )
+  public.is_admin_or_staff(id)
 );
 
 -- courses

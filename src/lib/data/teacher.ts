@@ -37,6 +37,29 @@ const createAnnouncementSchema = z.object({
   body: z.string().min(8).max(5000),
 });
 
+const createLearningMaterialSchema = z
+  .object({
+    courseId: z.string().uuid(),
+    title: z.string().min(3).max(180),
+    contentType: z.enum(["link", "file", "note", "video"]),
+    contentUrl: z.url().optional(),
+    contentText: z.string().max(10000).optional(),
+    sortOrder: z.coerce.number().min(0).max(500).default(0),
+  })
+  .refine(
+    (value) => {
+      if (value.contentType === "note") {
+        return Boolean(value.contentText?.trim());
+      }
+
+      return Boolean(value.contentUrl?.trim() || value.contentText?.trim());
+    },
+    {
+      message: "Provide a resource URL or supporting text for this material.",
+      path: ["contentUrl"],
+    },
+  );
+
 export async function createCourseForTeacher(
   teacherId: string,
   payload: z.infer<typeof createCourseSchema>,
@@ -101,5 +124,23 @@ export async function createAnnouncement(
     course_id: data.courseId ?? null,
     title: data.title,
     body: data.body,
+  });
+}
+
+export async function createLearningMaterialForCourse(
+  teacherId: string,
+  payload: z.infer<typeof createLearningMaterialSchema>,
+) {
+  const data = createLearningMaterialSchema.parse(payload);
+  const supabase = await createSupabaseServerClient();
+
+  return supabase.from("learning_materials").insert({
+    course_id: data.courseId,
+    title: data.title,
+    content_type: data.contentType,
+    content_url: data.contentUrl ?? null,
+    content_text: data.contentText ?? null,
+    sort_order: data.sortOrder,
+    published_at: new Date().toISOString(),
   });
 }

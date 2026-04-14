@@ -61,9 +61,9 @@ export default async function CourseDetailPage({
         </p>
 
         <p className="mt-4 text-sm text-[var(--text-secondary)]">
-          Pricing: {workspace.course.price_cents > 0
+          Fee metadata: {workspace.course.price_cents > 0
             ? currencyFromCents(workspace.course.price_cents, workspace.course.currency)
-            : "Free course"}
+            : "No fee"}
         </p>
 
         {requiresEnrollmentPreview ? (
@@ -102,6 +102,9 @@ export default async function CourseDetailPage({
                       <p className="mt-1 text-xs uppercase tracking-[0.12em] text-[var(--text-muted)]">
                         {material.content_type}
                       </p>
+                      {material.content_text ? (
+                        <p className="mt-2 text-sm text-[var(--text-secondary)]">{material.content_text}</p>
+                      ) : null}
                       {material.content_url ? (
                         <a
                           href={material.content_url}

@@ -50,6 +50,8 @@ cp .env.example .env.local
 supabase/migrations/202604140001_initial.sql
 ```
 
+If your project was initialized earlier, also run any newer files in `supabase/migrations/` in filename order (for example `202604140002_fix_profiles_rls_recursion.sql`).
+
 3. In Supabase Auth settings:
 
 - Enable Email/Password auth

@@ -9,16 +9,24 @@ const envSchema = z.object({
   APP_BASE_URL: z.string().url().default("http://localhost:3000"),
 });
 
-export const env = envSchema.parse({
-  NEXT_PUBLIC_SUPABASE_URL:
-    process.env.NEXT_PUBLIC_SUPABASE_URL ?? "https://placeholder.supabase.co",
-  NEXT_PUBLIC_SUPABASE_ANON_KEY:
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "placeholder-anon-key",
+const parsedEnv = envSchema.safeParse({
+  NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
   SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
   GOOGLE_GENAI_API_KEY: process.env.GOOGLE_GENAI_API_KEY,
-  GEMMA_MODEL: process.env.GEMMA_MODEL ?? "gemma-3-27b-it",
-  APP_BASE_URL: process.env.APP_BASE_URL ?? "http://localhost:3000",
+  GEMMA_MODEL: process.env.GEMMA_MODEL,
+  APP_BASE_URL: process.env.APP_BASE_URL,
 });
+
+if (!parsedEnv.success) {
+  const message = parsedEnv.error.issues
+    .map((issue) => `${issue.path.join(".")}: ${issue.message}`)
+    .join("; ");
+
+  throw new Error(`Invalid environment configuration: ${message}`);
+}
+
+export const env = parsedEnv.data;
 
 export function requireServerSecret(value: string | undefined, name: string) {
   if (!value) {

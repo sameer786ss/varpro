@@ -25,7 +25,7 @@ export default async function AdminCoursesPage() {
       <section>
         <h1 className="font-display text-3xl tracking-tight sm:text-4xl">Admin: Courses</h1>
         <p className="mt-2 text-sm text-[var(--text-secondary)] sm:text-base">
-          Review academic inventory, publication status, and monetized offerings.
+          Review academic inventory, publication status, and fee metadata across offerings.
         </p>
       </section>
 
@@ -39,7 +39,7 @@ export default async function AdminCoursesPage() {
             <CardDescription className="mt-2">Code: {course.code}</CardDescription>
             <CardDescription className="mt-1">Teacher ID: {course.teacher_id}</CardDescription>
             <CardDescription className="mt-1">
-              Price: {course.price_cents > 0 ? currencyFromCents(course.price_cents, "USD") : "Free"}
+              Fee: {course.price_cents > 0 ? currencyFromCents(course.price_cents, "USD") : "No fee"}
             </CardDescription>
           </Card>
         ))}

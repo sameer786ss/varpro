@@ -2,6 +2,7 @@ import {
   createAnnouncementAction,
   createAssignmentAction,
   createCourseAction,
+  createMaterialAction,
   createQuizAction,
 } from "@/app/(platform)/teacher/workspace/actions";
 import { Button } from "@/components/ui/button";
@@ -44,7 +45,7 @@ export default async function TeacherWorkspacePage({ searchParams }: TeacherWork
       <section className="grid gap-4 xl:grid-cols-2">
         <Card>
           <CardTitle>Create Course</CardTitle>
-          <CardDescription className="mt-1">Set up a new course shell with pricing metadata.</CardDescription>
+          <CardDescription className="mt-1">Set up a new course shell with fee metadata.</CardDescription>
 
           <form action={createCourseAction} className="mt-4 space-y-3">
             <Input name="title" required placeholder="Course title" />
@@ -135,6 +136,43 @@ export default async function TeacherWorkspacePage({ searchParams }: TeacherWork
             <Input name="title" required placeholder="Announcement title" />
             <Textarea name="body" required placeholder="Announcement body" />
             <Button type="submit">Publish</Button>
+          </form>
+        </Card>
+
+        <Card>
+          <CardTitle>Publish Learning Material</CardTitle>
+          <CardDescription className="mt-1">
+            Add links, notes, files, or videos to a course workspace.
+          </CardDescription>
+
+          <form action={createMaterialAction} className="mt-4 space-y-3">
+            <select
+              name="course_id"
+              required
+              className="h-11 w-full rounded-xl border border-[var(--border)] bg-[var(--surface-2)] px-3 text-sm text-[var(--text-primary)] outline-none"
+            >
+              <option value="">Select course</option>
+              {courses.map((course) => (
+                <option key={course.id} value={course.id}>
+                  {course.title}
+                </option>
+              ))}
+            </select>
+            <Input name="title" required placeholder="Material title" />
+            <select
+              name="content_type"
+              defaultValue="link"
+              className="h-11 w-full rounded-xl border border-[var(--border)] bg-[var(--surface-2)] px-3 text-sm text-[var(--text-primary)] outline-none"
+            >
+              <option value="link">Link</option>
+              <option value="video">Video</option>
+              <option value="file">File</option>
+              <option value="note">Note</option>
+            </select>
+            <Input name="content_url" type="url" placeholder="Resource URL (optional for notes)" />
+            <Textarea name="content_text" placeholder="Summary, key points, or note content" />
+            <Input name="sort_order" type="number" min={0} defaultValue={0} />
+            <Button type="submit">Publish Material</Button>
           </form>
         </Card>
       </section>

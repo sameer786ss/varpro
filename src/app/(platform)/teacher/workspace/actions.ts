@@ -8,6 +8,7 @@ import {
   createAnnouncement,
   createAssignmentForCourse,
   createCourseForTeacher,
+  createLearningMaterialForCourse,
   createQuizForCourse,
 } from "@/lib/data/teacher";
 
@@ -104,4 +105,34 @@ export async function createAnnouncementAction(formData: FormData) {
   revalidatePath("/courses");
   revalidatePath("/teacher/workspace");
   redirect("/teacher/workspace?success=Announcement+published");
+}
+
+export async function createMaterialAction(formData: FormData) {
+  const { user } = await requireRole(["teacher", "admin"]);
+
+  const courseId = String(formData.get("course_id") ?? "").trim();
+
+  const { error } = await createLearningMaterialForCourse(user.id, {
+    courseId,
+    title: String(formData.get("title") ?? ""),
+    contentType: String(formData.get("content_type") ?? "link") as
+      | "link"
+      | "file"
+      | "note"
+      | "video",
+    contentUrl: String(formData.get("content_url") ?? "") || undefined,
+    contentText: String(formData.get("content_text") ?? "") || undefined,
+    sortOrder: Number(formData.get("sort_order") ?? "0"),
+  });
+
+  if (error) {
+    redirect(`/teacher/workspace?error=${encodeURIComponent(error.message)}`);
+  }
+
+  revalidatePath("/courses");
+  revalidatePath("/teacher/workspace");
+  if (courseId) {
+    revalidatePath(`/courses/${courseId}`);
+  }
+  redirect("/teacher/workspace?success=Material+published");
 }

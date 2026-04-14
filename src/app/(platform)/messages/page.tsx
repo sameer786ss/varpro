@@ -3,10 +3,9 @@ import { formatDistanceToNow } from "date-fns";
 import { sendMessageAction } from "@/app/(platform)/messages/actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { requireSession } from "@/lib/auth/session";
-import { getMessagesForRole } from "@/lib/data/messages";
+import { getMessageComposerOptions, getMessagesForRole } from "@/lib/data/messages";
 
 type MessagesPageProps = {
   searchParams: Promise<{ error?: string; success?: string }>;
@@ -15,7 +14,10 @@ type MessagesPageProps = {
 export default async function MessagesPage({ searchParams }: MessagesPageProps) {
   const params = await searchParams;
   const { user, profile } = await requireSession();
-  const messages = await getMessagesForRole(user.id, profile.role);
+  const [messages, composerOptions] = await Promise.all([
+    getMessagesForRole(user.id, profile.role),
+    getMessageComposerOptions(user.id, profile.role),
+  ]);
 
   return (
     <div className="space-y-6">
@@ -70,7 +72,9 @@ export default async function MessagesPage({ searchParams }: MessagesPageProps) 
 
         <Card>
           <CardTitle>Send Message</CardTitle>
-          <CardDescription className="mt-1">Optional direct receiver ID or course context ID.</CardDescription>
+          <CardDescription className="mt-1">
+            Choose a direct recipient and/or course channel context.
+          </CardDescription>
 
           <form action={sendMessageAction} className="mt-4 space-y-3">
             <div>
@@ -85,17 +89,47 @@ export default async function MessagesPage({ searchParams }: MessagesPageProps) 
                 htmlFor="receiver_id"
                 className="mb-1 block text-sm text-[var(--text-secondary)]"
               >
-                Receiver User ID (optional)
+                Recipient (optional)
               </label>
-              <Input id="receiver_id" name="receiver_id" placeholder="uuid" />
+              <select
+                id="receiver_id"
+                name="receiver_id"
+                defaultValue=""
+                className="h-11 w-full rounded-xl border border-[var(--border)] bg-[var(--surface-2)] px-3 text-sm text-[var(--text-primary)] outline-none"
+              >
+                <option value="">No direct recipient</option>
+                {composerOptions.users.map((target) => (
+                  <option key={target.id} value={target.id}>
+                    {target.label}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div>
               <label htmlFor="course_id" className="mb-1 block text-sm text-[var(--text-secondary)]">
-                Course ID (optional)
+                Course Channel (optional)
               </label>
-              <Input id="course_id" name="course_id" placeholder="uuid" />
+              <select
+                id="course_id"
+                name="course_id"
+                defaultValue=""
+                className="h-11 w-full rounded-xl border border-[var(--border)] bg-[var(--surface-2)] px-3 text-sm text-[var(--text-primary)] outline-none"
+              >
+                <option value="">No course context</option>
+                {composerOptions.courses.map((course) => (
+                  <option key={course.id} value={course.id}>
+                    {course.title}
+                  </option>
+                ))}
+              </select>
             </div>
+
+            {composerOptions.users.length === 0 && composerOptions.courses.length === 0 ? (
+              <p className="text-xs text-[var(--text-muted)]">
+                You currently have no scoped recipients or course channels available.
+              </p>
+            ) : null}
 
             <Button type="submit">Send</Button>
           </form>

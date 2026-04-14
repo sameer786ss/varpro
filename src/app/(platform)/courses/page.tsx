@@ -81,8 +81,8 @@ export default async function CoursesPage() {
                   </span>
                   <span className="font-semibold text-[var(--text-primary)]">
                     {course.price_cents > 0
-                      ? currencyFromCents(course.price_cents, course.currency)
-                      : "Free"}
+                      ? `Fee ${currencyFromCents(course.price_cents, course.currency)}`
+                      : "No fee"}
                   </span>
                 </div>
               </Card>

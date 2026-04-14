@@ -10,6 +10,19 @@ export interface AssignmentInboxItem {
   dueSoon: boolean;
 }
 
+export interface AssignmentSubmissionReviewItem {
+  submissionId: string;
+  assignmentId: string;
+  assignmentTitle: string;
+  courseTitle: string;
+  studentId: string;
+  submissionText: string | null;
+  submissionUrl: string | null;
+  submittedAt: string;
+  score: number | null;
+  feedback: string | null;
+}
+
 export async function getAssignmentsForRole(userId: string, role: AppRole) {
   const supabase = await createSupabaseServerClient();
 
@@ -154,4 +167,112 @@ export async function submitAssignment(
   );
 
   return { error };
+}
+
+export async function getSubmissionReviewForRole(
+  userId: string,
+  role: AppRole,
+): Promise<AssignmentSubmissionReviewItem[]> {
+  if (role === "student") {
+    return [];
+  }
+
+  const supabase = await createSupabaseServerClient();
+
+  let assignments:
+    | Pick<
+        Database["public"]["Tables"]["assignments"]["Row"],
+        "id" | "title" | "course_id" | "created_at"
+      >[]
+    | null = null;
+
+  if (role === "teacher") {
+    const { data: courses } = await supabase
+      .from("courses")
+      .select("id")
+      .eq("teacher_id", userId)
+      .limit(200);
+
+    const courseIds = (courses ?? []).map((course) => course.id);
+    if (courseIds.length === 0) {
+      return [];
+    }
+
+    const { data } = await supabase
+      .from("assignments")
+      .select("id, title, course_id, created_at")
+      .in("course_id", courseIds)
+      .order("created_at", { ascending: false })
+      .limit(300);
+
+    assignments = data;
+  } else {
+    const { data } = await supabase
+      .from("assignments")
+      .select("id, title, course_id, created_at")
+      .order("created_at", { ascending: false })
+      .limit(300);
+
+    assignments = data;
+  }
+
+  const assignmentRows = assignments ?? [];
+  if (assignmentRows.length === 0) {
+    return [];
+  }
+
+  const assignmentIds = assignmentRows.map((assignment) => assignment.id);
+  const courseIds = [...new Set(assignmentRows.map((assignment) => assignment.course_id))];
+
+  const [{ data: submissions }, { data: courses }] = await Promise.all([
+    supabase
+      .from("assignment_submissions")
+      .select(
+        "id, assignment_id, student_id, submission_text, submission_url, submitted_at, score, feedback",
+      )
+      .in("assignment_id", assignmentIds)
+      .order("submitted_at", { ascending: false })
+      .limit(500),
+    supabase.from("courses").select("id, title").in("id", courseIds),
+  ]);
+
+  const assignmentById = new Map(assignmentRows.map((assignment) => [assignment.id, assignment]));
+  const courseById = new Map((courses ?? []).map((course) => [course.id, course.title]));
+
+  return (submissions ?? []).map((submission) => {
+    const assignment = assignmentById.get(submission.assignment_id);
+    const courseTitle = assignment ? courseById.get(assignment.course_id) : null;
+
+    return {
+      submissionId: submission.id,
+      assignmentId: submission.assignment_id,
+      assignmentTitle: assignment?.title ?? "Unknown Assignment",
+      courseTitle: courseTitle ?? "Unknown Course",
+      studentId: submission.student_id,
+      submissionText: submission.submission_text,
+      submissionUrl: submission.submission_url,
+      submittedAt: submission.submitted_at,
+      score: submission.score,
+      feedback: submission.feedback,
+    } satisfies AssignmentSubmissionReviewItem;
+  });
+}
+
+export async function gradeAssignmentSubmission(params: {
+  submissionId: string;
+  graderId: string;
+  score: number;
+  feedback?: string;
+}) {
+  const supabase = await createSupabaseServerClient();
+
+  return supabase
+    .from("assignment_submissions")
+    .update({
+      score: params.score,
+      feedback: params.feedback?.trim() ? params.feedback.trim() : null,
+      graded_by: params.graderId,
+      graded_at: new Date().toISOString(),
+    })
+    .eq("id", params.submissionId);
 }
