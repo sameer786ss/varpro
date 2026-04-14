@@ -1,8 +1,8 @@
 import Link from "next/link";
 
 import { signUpAction } from "@/app/(auth)/actions";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SubmitButton } from "@/components/ui/submit-button";
 
 type SignUpPageProps = {
   searchParams: Promise<{ error?: string }>;
@@ -62,9 +62,9 @@ export default async function SignUpPage({ searchParams }: SignUpPageProps) {
           </select>
         </div>
 
-        <Button className="w-full" type="submit">
+        <SubmitButton className="w-full" type="submit" pendingText="Creating account...">
           Create account
-        </Button>
+        </SubmitButton>
       </form>
 
       <p className="mt-4 text-sm text-[var(--text-secondary)]">

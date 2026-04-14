@@ -2,6 +2,8 @@
 
 import { Bot, Sparkles } from "lucide-react";
 import { useState, useTransition } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -11,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 export function TutorPanel({ courseId }: { courseId?: string }) {
   const [prompt, setPrompt] = useState("");
   const [answer, setAnswer] = useState(
-    "Ask a learning question and I will generate a contextual explanation.",
+    "### Ready when you are\n\nAsk a learning question and I will reply with structured notes, steps, and examples.",
   );
   const [isPending, startTransition] = useTransition();
 
@@ -74,7 +76,10 @@ export function TutorPanel({ courseId }: { courseId?: string }) {
           </div>
 
           <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-2)] p-4 text-sm leading-6 text-[var(--text-secondary)]">
-            {answer}
+            {isPending ? <p className="mb-3 text-xs text-[var(--text-muted)]">Generating response...</p> : null}
+            <div className="tutor-markdown">
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>{answer}</ReactMarkdown>
+            </div>
           </div>
         </div>
       </div>

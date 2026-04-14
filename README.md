@@ -73,6 +73,28 @@ npm run lint
 npm run build
 ```
 
+## Deep Seed Data
+
+Populate a fully linked dataset (auth users, courses, enrollments, materials, assignments, submissions, quizzes, attempts, announcements, messages, notifications, staff schedules, and AI tutor logs):
+
+```bash
+npm run seed:deep
+```
+
+Seed behavior:
+
+- Uses `SUPABASE_SERVICE_ROLE_KEY` and `NEXT_PUBLIC_SUPABASE_URL` from `.env.local`
+- Upserts seed users and profiles
+- Creates or refreshes records with `SEED |` and `[SEED]` prefixes
+- Re-runnable without creating duplicate seeded records
+
+Sample seeded logins (all use password `SeedPass123`):
+
+- `seed.admin@vardhanpro.local` (admin)
+- `seed.teacher.cs@vardhanpro.local` (teacher)
+- `seed.staff.ops@vardhanpro.local` (staff)
+- `seed.student01@vardhanpro.local` (student)
+
 ## Vercel Deployment
 
 1. Push repository to GitHub.

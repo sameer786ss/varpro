@@ -1,8 +1,8 @@
 import Link from "next/link";
 
 import { signInAction } from "@/app/(auth)/actions";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SubmitButton } from "@/components/ui/submit-button";
 
 type SignInPageProps = {
   searchParams: Promise<{ error?: string; success?: string; next?: string }>;
@@ -47,9 +47,9 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
           <Input id="password" name="password" type="password" required minLength={8} />
         </div>
 
-        <Button className="w-full" type="submit">
+        <SubmitButton className="w-full" type="submit" pendingText="Signing in...">
           Sign in
-        </Button>
+        </SubmitButton>
       </form>
 
       <p className="mt-4 text-sm text-[var(--text-secondary)]">
